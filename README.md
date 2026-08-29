@@ -15,6 +15,9 @@ Orvio Pulse is a four-role platform for live events. It runs registration and si
 
 Synthetic demo data is labeled. Vertex AI is optional: the same recovery plan is returned with `source: "deterministic-fallback"` when a Google project is not configured.
 
+Architecture, the multi-role flow, and UX wireframes are in
+[docs/architecture.md](docs/architecture.md).
+
 ## Roles
 
 | Workspace     | Path           |
