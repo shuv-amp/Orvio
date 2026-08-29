@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authorize, firestore } from "@/lib/server/firebase-admin";
+import { registerAttendee } from "@/lib/domain/registration";
+import { authorize } from "@/lib/server/firebase-admin";
 import { issueQrToken } from "@/lib/server/qr";
 import { allowRequest, limitFor } from "@/lib/server/rate-limit";
 import { RequestGuardError, readJsonObject } from "@/lib/server/request-guard";
@@ -10,17 +11,20 @@ export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
   eventId: z.string().min(3).max(100),
-  ticketId: z.string().uuid(),
+  name: z.string().min(1).max(120),
+  role: z.string().min(2).max(40),
+  skills: z.array(z.string().min(1).max(40)).max(8),
+  interests: z.array(z.string().min(1).max(40)).max(8),
 });
 
 export async function POST(request: Request) {
   const identity = await authorize(request, ["participant", "organizer"]);
   if (!identity)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const rateKey = `issue:${identity.uid}:${request.headers.get("x-forwarded-for")?.split(",")[0] ?? "local"}`;
-  if (!allowRequest(rateKey, limitFor(identity.synthetic, 20)))
+  const rateKey = `register:${identity.uid}:${request.headers.get("x-forwarded-for")?.split(",")[0] ?? "local"}`;
+  if (!allowRequest(rateKey, limitFor(identity.synthetic, 10)))
     return NextResponse.json(
-      { error: "Too many pass requests" },
+      { error: "Too many registration attempts" },
       { status: 429 },
     );
   try {
@@ -31,33 +35,23 @@ export async function POST(request: Request) {
         { status: 403 },
       );
     }
-    if (!identity.synthetic) {
-      const db = firestore();
-      if (!db)
-        return NextResponse.json(
-          { error: "Ticket store unavailable" },
-          { status: 503 },
-        );
-      const ticket = await db
-        .collection("events")
-        .doc(body.eventId)
-        .collection("tickets")
-        .doc(body.ticketId)
-        .get();
-      const ticketData = ticket.data();
-      const ownsTicket =
-        identity.role === "organizer" ||
-        ticketData?.participantId === identity.uid;
-      if (!ticket.exists || ticketData?.revoked === true || !ownsTicket) {
-        return NextResponse.json(
-          { error: "Ticket is not eligible for this pass" },
-          { status: 403 },
-        );
-      }
+    const registered = registerAttendee({
+      name: body.name,
+      role: body.role,
+      skills: body.skills,
+      interests: body.interests,
+    });
+    if (!registered.ok) {
+      return NextResponse.json({ error: registered.error }, { status: 400 });
     }
-    const token = await issueQrToken(body.eventId, body.ticketId);
+    const token = await issueQrToken(body.eventId, registered.ticketId);
     return NextResponse.json(
-      { token, expiresInSeconds: 28_800, synthetic: identity.synthetic },
+      {
+        ticketId: registered.ticketId,
+        token,
+        participant: registered.participant,
+        expiresInSeconds: 28_800,
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error: unknown) {
@@ -69,8 +63,8 @@ export async function POST(request: Request) {
     }
     const message =
       error instanceof z.ZodError
-        ? "Invalid event or ticket identifier"
-        : "Unable to issue pass";
+        ? "Invalid registration payload"
+        : "Unable to complete registration";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
