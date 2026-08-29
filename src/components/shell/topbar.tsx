@@ -23,6 +23,7 @@ const organizerTitles: Record<OrganizerSection, string> = {
   overview: "Control tower",
   signals: "Live signals",
   broadcasts: "Broadcast center",
+  analytics: "Analytics",
   audit: "Audit trail",
 };
 
