@@ -10,3 +10,5 @@ firebase-debug.log
 *.log
 *.tsbuildinfo
 .DS_Store
+.vercel/
+Assets/
