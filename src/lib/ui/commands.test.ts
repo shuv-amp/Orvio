@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  COMMAND_SECTIONS,
   COMMANDS,
   filterCommands,
   groupCommands,
@@ -27,9 +28,7 @@ describe("COMMANDS", () => {
         ? [command.action.section]
         : [],
     );
-    expect(new Set(sections)).toEqual(
-      new Set(["overview", "signals", "broadcasts", "audit"]),
-    );
+    expect(new Set(sections)).toEqual(new Set(COMMAND_SECTIONS));
   });
 
   it("covers every incident the recovery engine supports", () => {

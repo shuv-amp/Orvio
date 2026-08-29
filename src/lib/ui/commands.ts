@@ -4,7 +4,22 @@ import type { IncidentType } from "@/lib/domain/types";
 export type CommandView = "organizer" | "participant" | "judge" | "scanner";
 
 /** Sub-sections of the organizer workspace. */
-export type CommandSection = "overview" | "signals" | "broadcasts" | "audit";
+/**
+ * Sub-sections of the organizer workspace.
+ *
+ * Declared as a const array so the section list has one definition that both
+ * the type and the catalog test read. Adding a section here makes the test
+ * fail until a command can actually reach it.
+ */
+export const COMMAND_SECTIONS = [
+  "overview",
+  "signals",
+  "broadcasts",
+  "analytics",
+  "audit",
+] as const;
+
+export type CommandSection = (typeof COMMAND_SECTIONS)[number];
 
 /**
  * What running a command does. Keeping this a serialisable union — rather than
@@ -84,6 +99,14 @@ export const COMMANDS: readonly Command[] = [
     hint: "Targeted announcement",
     keywords: ["announce", "message", "notify", "push", "broadcast"],
     action: { kind: "navigate", view: "organizer", section: "broadcasts" },
+  },
+  {
+    id: "go-analytics",
+    label: "Open organizer analytics",
+    group: "Event ops",
+    hint: "Attendance and engagement",
+    keywords: ["analytics", "attendance", "engagement", "stats", "metrics"],
+    action: { kind: "navigate", view: "organizer", section: "analytics" },
   },
   {
     id: "go-audit",

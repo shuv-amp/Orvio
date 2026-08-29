@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ChartNoAxesColumn,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -30,6 +31,7 @@ const opsSections: {
 }[] = [
   { key: "signals", label: "Live signals", icon: Radio, count: 4 },
   { key: "broadcasts", label: "Broadcasts", icon: Megaphone },
+  { key: "analytics", label: "Analytics", icon: ChartNoAxesColumn },
   { key: "audit", label: "Audit trail", icon: ListChecks },
 ];
 
