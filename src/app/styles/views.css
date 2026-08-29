@@ -1261,3 +1261,82 @@
 .leader-row:hover {
   background: var(--surface-2);
 }
+
+/* ---------------------------------------------------------- analytics */
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px 26px;
+}
+
+.analytics-row {
+  display: grid;
+  gap: 7px;
+}
+
+.analytics-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-label {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 620;
+}
+
+.analytics-value {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 22px;
+  font-weight: 680;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.analytics-value span {
+  margin-left: 1px;
+  color: var(--text-subtle);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.analytics-detail {
+  color: var(--text-subtle);
+  font-size: 12.5px;
+}
+
+/* Surfaced when a signed pass cannot be issued, instead of a dead control. */
+.pass-error {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 26px 18px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  color: var(--danger);
+  text-align: center;
+}
+
+.pass-error strong {
+  color: var(--text);
+  font-size: 13.5px;
+}
+
+.pass-error p {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.pass-error button {
+  margin-top: 8px;
+}
+
+.scan-error {
+  color: var(--danger);
+  font-size: 12.5px;
+  text-align: center;
+}
