@@ -1,65 +1,104 @@
 # Orvio Pulse
 
-> Most event platforms show organizers what already happened. Orvio predicts what is about to break and gives them a safe, auditable recovery plan.
+Event operations that see a break before it hits the floor.
 
-Orvio Pulse is a four-role Smart Event Management Platform built for PromptWars × AbhiyantriX. It covers the required event lifecycle while concentrating the demo around three memorable operations: explainable team formation, resilient signed QR check-in, and human-approved incident recovery.
+Orvio Pulse is a four-role platform for live events. It runs registration and signed QR check-in, explainable team formation, broadcasts, structured judging, a live leaderboard, and organizer analytics. Event Pulse sits on that same operational picture and produces a recovery plan that only an organizer can approve.
 
-## The 90-second path
+![Orvio Pulse control tower: live event metrics, the Event Pulse risk panel, the incident desk, and the live leaderboard](docs/homescreen.png)
 
-1. Open **Participant → Match Lab**. Switch recommendations to show deterministic fit components and participant-controlled swaps.
-2. Open **Scanner**, disconnect it, scan Aanya’s signed pass, then reconnect. The queued scan is verified; scan again to see replay protection reject the duplicate.
-3. Open **Control tower → Simulate disruption**. Review the projected before/after metrics and approve the judge-recovery proposal.
-4. Open **Judge workspace**, adjust rubric evidence, and finalize the immutable score.
+## Demo path
 
-Every screen is preloaded with clearly labeled synthetic data. Gemini is optional: without a configured Google project, the same demo uses a visible, deterministic fallback rather than failing or pretending an AI call succeeded.
+1. **Participant** — register a walk-up attendee. A unique ticket UUID and signed QR pass are issued. Match Lab shows the fit components and a participant-controlled swap.
+2. **Scanner** — disconnect, scan Aanya’s pass, reconnect. The queued scan verifies. Scan again and replay protection rejects the duplicate.
+3. **Control tower → Recovery Engine** — choose a judge, gate, or venue incident. Review the before/after metric. Approve the proposal.
+4. **Judging portal** — score against the locked rubric, attach evidence, finalize. The leaderboard re-ranks immediately.
 
-## Requirement → evidence map
+Synthetic demo data is labeled. Vertex AI is optional: the same recovery plan is returned with `source: "deterministic-fallback"` when a Google project is not configured.
 
-| Requirement / evaluator signal | Product evidence | Implementation | Verification |
-|---|---|---|---|
-| Registration and QR check-in | Signed event pass; offline queue; duplicate rejection | `issueQrToken`, `verifyQrToken`, transactional `recordCheckIn` | Tamper, event-boundary, PII, and replay tests |
-| Smart team formation | Ranked teams, fit bars, reasons, skill gaps, structured swap | Deterministic 35/25/20/10/10 model in `matching.ts` | Range, rank, explanation, capacity tests |
-| Broadcast center | Urgent live feed and recovery announcement | Scoped announcement model; recovery approval updates feed | Golden demo interaction |
-| Interactive judging | Locked rubric v3, evidence feedback, immutable finalize | Weighted domain function and Firestore role rules | Unit tests and deny-by-default rules |
-| Leaderboard and analytics | Raw published scores; FairScore advisory | Raw weighted mean; drift never silently edits score | Rubric and insufficient-evidence tests |
-| Innovation | Event Pulse + chaos simulator + human approval | Pure risk engine; Gemini only explains approved facts | Threshold and draft-state tests |
-| Code quality | Strict TypeScript, bounded modules, pinned lockfile | Next.js App Router, Zod, domain/server split | ESLint, TypeScript, Vitest, production build |
-| Security | No PII in QR, strict CSP nonces, replay lock, role isolation | JOSE, Firebase Admin, Firestore Rules, no-store APIs | Zero known production dependency vulnerabilities |
-| Accessibility | Semantic landmarks, keyboard controls, live status, reduced motion | Native elements, focus-visible, ARIA status, text status labels | Lint plus manual desktop/mobile pass |
-| Google services | Cloud Run, Firestore, Auth claims, Vertex Gemini | Docker/Cloud Build, Admin adapter, structured Gemini response | Health endpoints and fallback-safe demo |
+## Roles
+
+| Workspace     | Path           |
+| ------------- | -------------- |
+| Control tower | `/`            |
+| Participant   | `/participant` |
+| Judge         | `/judge`       |
+| Organizer     | `/organizer`   |
+| Scanner       | `/scanner`     |
+
+## Lifecycle
+
+| Capability              | In product                                                          | In code                                                                       | Verified by                                        |
+| ----------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| Registration and QR     | Unique ticket UUID, signed pass, offline queue, duplicate rejection | `registerAttendee`, `POST /api/registration`, `issueQrToken`, `recordCheckIn` | XSS, taxonomy, tamper, event-boundary, PII, replay |
+| Team formation          | Ranked teams, fit meters, reasons, skill gaps, structured swap      | 35 / 25 / 20 / 10 / 10 model in `matching.ts`                                 | Range, rank, explanation, capacity                 |
+| Broadcasts              | Live feed; recovery approval publishes the announcement             | Scoped announcements; sanitized composer                                      | Golden-path demo                                   |
+| Judging                 | Locked rubric, evidence, immutable finalize                         | Weighted `judging.ts`; Firestore role rules                                   | Rubric math, deny-by-default rules                 |
+| Leaderboard & analytics | Live re-rank after finalize; attendance and judging progress        | `applyPublishedScore`, `rankPublishedScores`, `analytics.ts`                  | Re-rank, clamp, O(1) snapshot                      |
+| Recovery                | Incident simulation, truthful projection, human approval            | `pulse.ts`; Gemini rewrites copy only                                         | Thresholds, draft-until-approve                    |
+
+## Architecture
+
+```
+src/lib/domain   match, pulse, judging, registration, ranking, sanitization
+src/lib/server   QR signing, origin guards, Firebase Auth, Firestore, rate limits
+src/app/api      Zod contracts, Cache-Control: no-store, role-gated handlers
+```
+
+Business rules are plain TypeScript, separate from React and Google Cloud. Route handlers stay small. Demo mode is labeled and scoped to `abhiyantrix-2026`; cloud mode verifies Firebase ID tokens and role claims.
+
+## Google Cloud
+
+Five services on the critical path. Full file map: [GOOGLE_SERVICES.md](GOOGLE_SERVICES.md).
+
+| Service                         | Role                                                                |
+| ------------------------------- | ------------------------------------------------------------------- |
+| Cloud Run                       | App Router, role UIs, JSON APIs; scale-to-zero, 512 MiB, max 3      |
+| Cloud Firestore                 | Atomic check-in + nonce replay lock, immutable scores, audit logs   |
+| Firebase Authentication         | ID tokens and `role` claims on every mutating API                   |
+| Vertex AI Gemini                | Recovery copy against a JSON schema; cannot invent numbers or state |
+| Cloud Build + Artifact Registry | Reproducible image → digest → Cloud Run                             |
+
+## Security
+
+See [SECURITY.md](SECURITY.md).
+
+QR passes are HS256, audience `orvio-check-in`, eight-hour expiry, ticket UUID + nonce only — no name, email, or phone. Firestore records the ticket and nonce in one transaction. Mutating APIs require a same-origin `Origin` header, cap JSON at 8 KB, and sanitize attendee-authored text. Production headers include a nonce CSP, `X-Content-Type-Options`, frame denial, Referrer-Policy, Permissions-Policy, HSTS, COOP, and CORP. The image runs as non-root `nextjs` (UID 1001). Error boundaries never render stack traces.
+
+## Quality
+
+Strict TypeScript (`forceConsistentCasingInFileNames`, `noFallthroughCasesInSwitch`). ESLint with `eqeqeq`, `no-var`, `prefer-const`, `no-console`, `no-duplicate-imports`, zero warnings. Prettier, `.editorconfig`, `.gitattributes`, JSDoc on exported domain and server functions. 404, loading, and error UI. CI: format, lint, typecheck, coverage, Firestore rules, production build, Playwright.
+
+**Tests.** 65 Vitest cases: matching, pulse thresholds, rubric math, token tamper / expiry / event isolation, replay, origin / CSRF, XSS, registration, analytics, rate limits, recovery fallbacks. Coverage gates: 80% statements and lines, 60% branches, 95% functions. Seven emulator-backed Firestore rules cases. Playwright covers the multi-role demo on desktop and mobile; axe-core runs on every principal screen.
+
+**Accessibility.** WCAG 2.1 AA: `lang`, skip link, landmarks, visible `:focus-visible`, `aria-live` status, `role="meter"` fit bars, a captioned leaderboard `<table>`, high-contrast mode (`aria-pressed`), `prefers-reduced-motion`, `prefers-contrast`, and `forced-colors`.
+
+Matching, ranking, and analytics are linear in the active event slice. Leaderboard totals update from published scores. Cloud Run: `--min-instances=0`, `--memory=512Mi`, concurrency 80.
 
 ## Run locally
 
-Requirements: Node.js 22+.
+Node.js 24 (see `.nvmrc`).
 
 ```bash
 npm ci
 cp .env.example .env.local
-# Replace QR_SIGNING_SECRET with: openssl rand -base64 32
+# openssl rand -base64 32  →  QR_SIGNING_SECRET
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Role-specific URLs are `/participant`, `/judge`, `/organizer`, and `/scanner`.
-
-Quality gate:
+http://localhost:3000
 
 ```bash
 npm run verify
-npm audit --omit=dev
+npx firebase emulators:exec --only firestore "npm run test:rules"
+npx playwright install chromium
+npm run test:e2e
 ```
 
-## Deployment reality: free tier vs no billing account
+## Deploy
 
-- Firebase Spark needs no payment method, but Firebase’s official pricing matrix marks Cloud Run, Cloud Build, Artifact Registry, and Cloud Logging as unavailable on Spark.
-- Cloud Run has a generous usage-free tier and scale-to-zero, but its official quickstart still requires billing to be enabled on the project.
-- Therefore, a no-card account cannot honestly produce the mandatory Cloud Run URL without organizer-provided credits or access to a billing-enabled project.
-
-Ask the sponsor desk: **“The submission form requires a Cloud Run URL. Can you attach the event credit/billing account to my project or provide the hackathon project invite?”** This is the contest-compliant path. Do not submit a different host in a field that explicitly validates Cloud Run.
-
-Once access is granted:
+Production host is Cloud Run.
 
 ```bash
-gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com firestore.googleapis.com aiplatform.googleapis.com
 gcloud artifacts repositories create orvio --repository-format=docker --location=asia-south1
@@ -67,20 +106,8 @@ printf '%s' "$(openssl rand -base64 32)" | gcloud secrets create qr-signing-secr
 gcloud builds submit --config cloudbuild.yaml --substitutions=COMMIT_SHA="$(git rev-parse HEAD)"
 ```
 
-Before judging, grant the Cloud Run service identity `roles/aiplatform.user` and the minimum Firestore role, mount `QR_SIGNING_SECRET` from Secret Manager, deploy Firestore rules, then verify `/api/healthz` in an incognito window. Keep `min-instances=0` for cost control; warm the URL immediately before the pitch.
-
-Official references: [Firebase pricing](https://firebase.google.com/pricing), [Cloud Run pricing](https://cloud.google.com/run/pricing), [Cloud Run deployment prerequisites](https://docs.cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-nodejs-service).
-
-## Architecture and decisions
-
-- `src/lib/domain`: deterministic, testable match, pulse, and judging logic.
-- `src/lib/server`: token signing, Firebase authorization, Firestore transactions, and bounded rate limiting.
-- `src/app/api`: schema-validated, no-store route handlers. Gemini failure returns a declared deterministic fallback.
-- `firestore.rules`: client access is deny-by-default; used QR nonces and audit writes are server-only.
-- `src/proxy.ts`: per-request CSP nonce; no `unsafe-inline` scripts in production.
-
-The complete research, UX, threat model, system diagrams, pitch, and submission runbook are in [`docs/winning-strategy.md`](docs/winning-strategy.md).
+Mount `QR_SIGNING_SECRET` from Secret Manager. Grant the Cloud Run identity `roles/aiplatform.user` and the minimum Firestore role. Deploy `firestore.rules`. Confirm `/api/healthz`.
 
 ## License
 
-Original hackathon implementation. No source code was copied from the inspiration repositories listed in the research document.
+MIT. See [LICENSE](LICENSE).
