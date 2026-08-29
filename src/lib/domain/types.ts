@@ -1,5 +1,6 @@
 export type Role = "participant" | "judge" | "organizer";
 export type Severity = "healthy" | "watch" | "critical";
+export type IncidentType = "judge-dropout" | "gate-surge" | "venue-relocation";
 
 export interface Participant {
   id: string;
@@ -49,8 +50,20 @@ export interface RecoveryProposal {
   id: string;
   incident: string;
   status: "draft" | "approved";
-  before: { completionMinutes: number; overloadedJudges: number; reach: number };
+  before: {
+    completionMinutes: number;
+    overloadedJudges: number;
+    reach: number;
+  };
   after: { completionMinutes: number; overloadedJudges: number; reach: number };
+  comparison: {
+    label: string;
+    beforeValue: number;
+    afterValue: number;
+    unit: string;
+    beforeNote: string;
+    afterNote: string;
+  };
   actions: string[];
   announcement: string;
   source: "gemini" | "deterministic-fallback";
@@ -91,6 +104,7 @@ export interface EventMetrics {
   unmatchedParticipants: number;
   teamCutoffMinutes: number;
   pendingReviews: number;
+  completedReviews: number;
   activeJudges: number;
   minutesRemaining: number;
   averageReviewMinutes: number;
