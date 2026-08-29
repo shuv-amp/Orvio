@@ -17,10 +17,20 @@ function signingKey() {
   if (!value && process.env.NODE_ENV === "production") {
     throw new Error("QR_SIGNING_SECRET is required in production");
   }
-  return new TextEncoder().encode(value ?? "orvio-local-demo-secret-not-for-production");
+  return new TextEncoder().encode(
+    value ?? "orvio-local-demo-secret-not-for-production",
+  );
 }
 
-export async function issueQrToken(eventId: string, ticketId: string, lifetimeSeconds = 8 * 60 * 60) {
+/**
+ * Issue an HS256 JWT pass: eventId, ticket UUID, jti nonce, audience, expiry.
+ * Claims never include name, email, or phone.
+ */
+export async function issueQrToken(
+  eventId: string,
+  ticketId: string,
+  lifetimeSeconds = 8 * 60 * 60,
+) {
   const now = Math.floor(Date.now() / 1000);
   return new SignJWT({ eventId, ticketId })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
@@ -31,13 +41,21 @@ export async function issueQrToken(eventId: string, ticketId: string, lifetimeSe
     .sign(signingKey());
 }
 
-export async function verifyQrToken(token: string, expectedEventId: string): Promise<QrClaims> {
+/**
+ * Verify audience, algorithm, expiry, and event boundary. Rejects
+ * tampered signatures and tokens issued for a different event.
+ */
+export async function verifyQrToken(
+  token: string,
+  expectedEventId: string,
+): Promise<QrClaims> {
   const { payload, protectedHeader } = await jwtVerify(token, signingKey(), {
     algorithms: ["HS256"],
     audience: "orvio-check-in",
   });
   if (protectedHeader.typ !== "JWT") throw new Error("Unexpected token type");
   const claims = claimsSchema.parse(payload);
-  if (claims.eventId !== expectedEventId) throw new Error("Token belongs to another event");
+  if (claims.eventId !== expectedEventId)
+    throw new Error("Token belongs to another event");
   return claims;
 }

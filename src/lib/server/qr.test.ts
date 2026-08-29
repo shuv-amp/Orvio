@@ -14,11 +14,38 @@ describe("signed check-in passes", () => {
 
   it("rejects a token at the wrong event boundary", async () => {
     const token = await issueQrToken("event-2026", ticketId);
-    await expect(verifyQrToken(token, "other-event")).rejects.toThrow("another event");
+    await expect(verifyQrToken(token, "other-event")).rejects.toThrow(
+      "another event",
+    );
   });
 
   it("rejects tampering", async () => {
     const token = await issueQrToken("event-2026", ticketId);
-    await expect(verifyQrToken(`${token.slice(0, -1)}x`, "event-2026")).rejects.toThrow();
+    // Flip a character in the middle of the signature to reliably corrupt it.
+    const parts = token.split(".");
+    const sig = parts[2];
+    const mid = Math.floor(sig.length / 2);
+    const flipped = sig[mid] === "A" ? "B" : "A";
+    parts[2] = sig.slice(0, mid) + flipped + sig.slice(mid + 1);
+    await expect(
+      verifyQrToken(parts.join("."), "event-2026"),
+    ).rejects.toThrow();
+  });
+
+  it("issues a unique replay nonce for every pass", async () => {
+    const first = await verifyQrToken(
+      await issueQrToken("event-2026", ticketId),
+      "event-2026",
+    );
+    const second = await verifyQrToken(
+      await issueQrToken("event-2026", ticketId),
+      "event-2026",
+    );
+    expect(first.jti).not.toBe(second.jti);
+  });
+
+  it("rejects expired passes", async () => {
+    const token = await issueQrToken("event-2026", ticketId, -1);
+    await expect(verifyQrToken(token, "event-2026")).rejects.toThrow();
   });
 });
