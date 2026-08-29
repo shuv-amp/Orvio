@@ -1,0 +1,816 @@
+/* Application chrome: sidebar, topbar, overlays, and the mobile dock. */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---------------------------------------------------------------- sidebar */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding: 24px 16px 16px;
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  border-right: 1px solid var(--brand-border);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+
+.brand-mark {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+}
+
+.brand-mark::before,
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  border-radius: 10px;
+  background: var(--accent);
+}
+
+.brand-mark::before {
+  inset: 4px 8px;
+}
+
+.brand-mark::after {
+  inset: 8px 4px;
+}
+
+.brand-mark > span {
+  position: absolute;
+  inset: 7px;
+  z-index: 1;
+  border-radius: 50%;
+  background: var(--brand-surface);
+}
+
+.brand-product {
+  margin-left: 2px;
+  padding: 3px 6px;
+  border: 1px solid var(--brand-border);
+  border-radius: 5px;
+  color: var(--accent);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.event-chip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2px 9px;
+  margin: 24px 6px 20px;
+  padding: 10px 12px;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  background: var(--brand-surface-2);
+}
+
+.event-chip-label {
+  color: var(--brand-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.event-chip-name {
+  grid-column: 2;
+  color: var(--brand-text);
+  font-size: 12.5px;
+  font-weight: 620;
+}
+
+.live-dot {
+  grid-row: span 2;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+.sidebar nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-label {
+  margin: 0 10px 8px;
+  color: var(--brand-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.nav-label.spaced {
+  margin-top: 22px;
+}
+
+.sidebar nav button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--brand-text-muted);
+  font-size: 13.5px;
+  text-align: left;
+  transition:
+    background var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease);
+}
+
+.sidebar nav button:hover {
+  background: var(--brand-surface-2);
+  color: var(--brand-text);
+}
+
+.sidebar nav button.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 640;
+}
+
+.nav-count {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--danger);
+  /* See .score-picker: --danger is lightened in dark mode. */
+  color: var(--text-inverse);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sidebar nav button.active .nav-count {
+  background: var(--accent-ink);
+  color: var(--accent);
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding-top: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.demo-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  background: var(--brand-surface-2);
+  color: var(--accent);
+}
+
+.demo-badge span {
+  display: grid;
+}
+
+.demo-badge strong {
+  color: var(--brand-text);
+  font-size: 12.5px;
+}
+
+.demo-badge span span {
+  color: var(--brand-text-muted);
+  font-size: 11.5px;
+}
+
+.profile-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  color: var(--brand-text-muted);
+}
+
+.profile-identity {
+  display: grid;
+  min-width: 0;
+}
+
+.profile-identity strong {
+  color: var(--brand-text);
+  font-size: 12.5px;
+}
+
+.profile-identity span {
+  font-size: 11.5px;
+}
+
+.profile-mini > svg {
+  margin-left: auto;
+}
+
+.avatar,
+.top-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.nav-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  border: 0;
+  background: var(--scrim);
+}
+
+/* ----------------------------------------------------------------- topbar */
+
+main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px var(--gutter);
+  border-bottom: 1px solid var(--border);
+  /* Opaque: a translucent header made the contrast of its own controls
+     depend on whatever scrolled underneath it. */
+  background: var(--surface);
+}
+
+.topbar-title p {
+  color: var(--text-subtle);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.command-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 218px;
+  padding: 7px 8px 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  /* Muted, not subtle: this is an interactive control, and subtle text over
+     the translucent topbar composited below 4.5:1 in dark mode. */
+  color: var(--text-muted);
+  font-size: 13px;
+  transition:
+    border-color var(--speed-fast) var(--ease),
+    background var(--speed-fast) var(--ease);
+}
+
+.command-search:hover {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.command-search span {
+  margin-right: auto;
+}
+
+.icon-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-muted);
+  transition:
+    border-color var(--speed-fast) var(--ease),
+    color var(--speed-fast) var(--ease);
+}
+
+.icon-button:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.icon-button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent-border);
+  color: var(--accent-ink);
+}
+
+.notification-dot {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.mobile-menu {
+  display: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+/* ---------------------------------------------------------- notifications */
+
+.notifications {
+  position: relative;
+}
+
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  width: min(360px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: rise var(--speed) var(--ease);
+}
+
+.notification-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 12px 8px;
+}
+
+.notification-head h2 {
+  font-size: 14px;
+}
+
+.notification-head span {
+  color: var(--text-subtle);
+  font-size: 11.5px;
+}
+
+.notification-panel li {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+}
+
+.notification-panel li + li {
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.notification-icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+
+.notification-panel li.urgent .notification-icon {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.notification-panel strong {
+  display: block;
+  font-size: 13px;
+}
+
+.notification-panel p {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.notification-panel small {
+  color: var(--text-subtle);
+  font-size: 11.5px;
+}
+
+.notification-all {
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: transparent;
+  color: var(--info);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.notification-all:hover {
+  background: var(--surface-2);
+}
+
+/* ------------------------------------------------------------ demo ribbon */
+
+.demo-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.demo-ribbon-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page-content {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 26px var(--gutter) 64px;
+}
+
+/* ------------------------------------------------------------ mobile dock */
+
+.mobile-role-dock {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+}
+
+.mobile-role-dock button {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  flex: 1;
+  padding: 7px 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--brand-text-muted);
+  font-size: 11px;
+}
+
+.mobile-role-dock button.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+
+/* ------------------------------------------------------------------ toast */
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 120;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: min(400px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--success);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: rise var(--speed) var(--ease);
+}
+
+.toast.warning {
+  border-left-color: var(--warn);
+}
+
+.toast-icon {
+  color: var(--success);
+}
+
+.toast.warning .toast-icon {
+  color: var(--warn);
+}
+
+.toast-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.toast-copy strong {
+  font-size: 13.5px;
+}
+
+.toast-copy span {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.toast > button {
+  margin-left: auto;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-subtle);
+}
+
+.toast > button:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+/* --------------------------------------------------------- command palette */
+
+.palette-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: start center;
+  padding: clamp(48px, 12vh, 140px) 16px 16px;
+}
+
+.palette-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: var(--scrim);
+  backdrop-filter: blur(3px);
+}
+
+.palette {
+  position: relative;
+  width: min(600px, 100%);
+  max-height: min(560px, 72vh);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  animation: rise var(--speed) var(--ease);
+}
+
+.palette-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-subtle);
+}
+
+.palette-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+}
+
+.palette-field input::placeholder {
+  color: var(--text-subtle);
+}
+
+.palette-results {
+  flex: 1;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.palette-group-label {
+  padding: 10px 12px 5px;
+  color: var(--text-subtle);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.palette-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.palette-option.active {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
+}
+
+.palette-option-label {
+  font-size: 13.5px;
+  font-weight: 560;
+}
+
+.palette-option-hint {
+  margin-left: auto;
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+.palette-empty {
+  padding: 26px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.palette-foot {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-subtle);
+  font-size: 11.5px;
+}
+
+.palette-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ------------------------------------------------------------ guided tour */
+
+.tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  pointer-events: none;
+}
+
+.tour-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim-soft);
+}
+
+.tour-spotlight {
+  position: absolute;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 9999px var(--scrim-soft);
+  transition:
+    top var(--speed) var(--ease),
+    left var(--speed) var(--ease),
+    width var(--speed) var(--ease),
+    height var(--speed) var(--ease);
+}
+
+.tour-panel {
+  position: absolute;
+  right: clamp(16px, 4vw, 40px);
+  bottom: clamp(16px, 5vh, 40px);
+  width: min(430px, calc(100vw - 32px));
+  padding: 20px 22px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  pointer-events: auto;
+  animation: rise var(--speed) var(--ease);
+}
+
+.tour-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.tour-progress {
+  color: var(--text-subtle);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.tour-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+
+.tour-panel h2 {
+  font-size: 1.42rem;
+  margin-bottom: 8px;
+}
+
+.tour-panel > p {
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.tour-dots {
+  display: flex;
+  gap: 5px;
+  margin: 16px 0;
+}
+
+.tour-dots span {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+}
+
+.tour-dots span.done {
+  background: var(--accent-strong);
+}
+
+.tour-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
