@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function role(name) { return signedIn() && request.auth.token.role == name; }
+    function organizer() { return role('organizer'); }
+    function sameUser(userId) { return signedIn() && request.auth.uid == userId; }
+
+    match /events/{eventId} {
+      allow read: if signedIn();
+      allow write: if organizer();
+
+      match /participants/{participantId} {
+        allow read: if organizer() || sameUser(participantId);
+        allow create, update: if sameUser(participantId)
+          && request.resource.data.keys().hasOnly(['name', 'role', 'skills', 'interests', 'availability', 'teamId', 'checkedIn']);
+        allow delete: if organizer();
+      }
+
+      match /teamRequests/{requestId} {
+        allow read: if organizer() || sameUser(resource.data.participantId);
+        allow create: if signedIn() && role('participant')
+          && request.resource.data.participantId == request.auth.uid;
+        allow update, delete: if organizer();
+      }
+
+      match /teams/{teamId} {
+        allow read: if signedIn();
+        allow write: if organizer();
+      }
+
+      match /announcements/{announcementId} {
+        allow read: if signedIn();
+        allow write: if organizer();
+      }
+
+      match /judgeAssignments/{assignmentId} {
+        allow read: if organizer() || (role('judge') && resource.data.judgeId == request.auth.uid);
+        allow write: if organizer();
+      }
+
+      match /scores/{scoreId} {
+        allow read: if organizer() || (role('judge') && resource.data.judgeId == request.auth.uid);
+        allow create: if role('judge')
+          && request.resource.data.judgeId == request.auth.uid
+          && request.resource.data.finalized == true;
+        allow update, delete: if false;
+      }
+
+      match /leaderboards/{snapshotId} {
+        allow read: if resource.data.published == true || organizer();
+        allow write: if organizer();
+      }
+
+      // Check-ins, used nonces, and audit logs are server-only. Admin SDK bypasses rules.
+      match /checkIns/{ticketId} { allow read: if organizer(); allow write: if false; }
+      match /qrNonces/{nonceId} { allow read, write: if false; }
+      match /auditLogs/{logId} { allow read: if organizer(); allow write: if false; }
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
