@@ -44,11 +44,11 @@ export function CommandPalette({
   const activeCommand = results[activeIndex];
   const optionId = (id: string) => `${baseId}-${id}`;
 
-  // Take focus on open and hand it back to the trigger on close.
+  // Take focus on open. Focus is handed back by the shell after the overlay
+  // unmounts: restoring it here would fire while the shell is still inert,
+  // and a focus() call into an inert subtree is silently ignored.
   useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
     inputRef.current?.focus();
-    return () => previous?.focus();
   }, []);
 
   // Keep the highlighted row inside the scroll viewport.

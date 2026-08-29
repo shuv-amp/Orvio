@@ -1,7 +1,7 @@
 "use client";
 
 import { ShieldCheck } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { simulateIncident } from "@/lib/domain/pulse";
 import type { IncidentType, RecoveryProposal } from "@/lib/domain/types";
 import type { Command } from "@/lib/ui/commands";
@@ -54,10 +54,17 @@ export function OrvioApp({
   const [tourStep, setTourStep] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
 
+  // Element to hand focus back to once a modal overlay closes.
+  const overlayReturnFocus = useRef<HTMLElement | null>(null);
+
   const [proposal, setProposal] = useState<RecoveryProposal | null>(null);
   const [incidentType, setIncidentType] =
     useState<IncidentType>("judge-dropout");
   const [simulating, setSimulating] = useState(false);
+
+  const openOverlay = useCallback(() => {
+    overlayReturnFocus.current = document.activeElement as HTMLElement | null;
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -72,11 +79,14 @@ export function OrvioApp({
       if (event.key.toLowerCase() !== "k") return;
       if (!event.metaKey && !event.ctrlKey) return;
       event.preventDefault();
-      setPaletteOpen((current) => !current);
+      setPaletteOpen((current) => {
+        if (!current) openOverlay();
+        return !current;
+      });
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [openOverlay]);
 
   const goTo = useCallback((next: View, section?: OrganizerSection) => {
     setView(next);
@@ -152,9 +162,10 @@ export function OrvioApp({
   );
 
   const startTour = useCallback(() => {
+    openOverlay();
     goTo(TOUR_STEPS[0].view, TOUR_STEPS[0].section);
     setTourStep(0);
-  }, [goTo]);
+  }, [goTo, openOverlay]);
 
   const moveTour = useCallback(
     (direction: 1 | -1) => {
@@ -176,6 +187,13 @@ export function OrvioApp({
   // cannot wander into content that is visually behind a scrim.
   const overlayOpen = paletteOpen || tourStep !== null;
 
+  useEffect(() => {
+    if (overlayOpen) return;
+    // Runs after the render that removed `inert`, so the trigger is focusable.
+    overlayReturnFocus.current?.focus();
+    overlayReturnFocus.current = null;
+  }, [overlayOpen]);
+
   return (
     <>
       <div className="app-shell" inert={overlayOpen}>
@@ -195,7 +213,10 @@ export function OrvioApp({
             announcements={state.announcements}
             openMenu={() => setNavOpen(true)}
             navOpen={navOpen}
-            openPalette={() => setPaletteOpen(true)}
+            openPalette={() => {
+              openOverlay();
+              setPaletteOpen(true);
+            }}
             startTour={startTour}
             goToBroadcasts={() => goTo("organizer", "broadcasts")}
             themeChoice={appearance.themeChoice}
