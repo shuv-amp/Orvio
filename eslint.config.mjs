@@ -5,5 +5,14 @@ import nextTypeScript from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
+  {
+    rules: {
+      eqeqeq: "error",
+      "no-var": "error",
+      "prefer-const": "error",
+      "no-console": "error",
+      "no-duplicate-imports": "error",
+    },
+  },
   globalIgnores([".next/**", "node_modules/**", "coverage/**"]),
 ]);
