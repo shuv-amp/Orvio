@@ -11,15 +11,15 @@ import {
   WifiOff,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { DEMO_EVENT_ID } from "@/lib/domain/demo";
+import { useState } from "react";
+import { postJson, type SyncCheckInResponse } from "@/lib/api/contracts";
+import { DEMO_EVENT_ID, DEMO_GATE_LABEL } from "@/lib/domain/demo";
 import type { EventMetrics } from "@/lib/domain/types";
+import { useSignedPass } from "../../hooks/use-signed-pass";
 import { StatusPill } from "../../ui/status-pill";
 import type { ShowToast } from "../../types";
 
-const DEMO_TICKET_ID = "5c327c3a-2d3f-49c6-b087-f8de29ae1042";
 const SCANNER_ID = "north-gate-01";
-const GATE_LABEL = "North Gate 01";
 
 type ScanResult = "idle" | "accepted" | "duplicate" | "queued" | "invalid";
 
@@ -71,53 +71,39 @@ export function ScannerView({
   onAccepted: (ticketSuffix: string, gate: string) => void;
   toast: ShowToast;
 }) {
+  const { state: pass, retry: retryPass } = useSignedPass();
   const [online, setOnline] = useState(true);
-  const [token, setToken] = useState("");
   const [queue, setQueue] = useState<QueuedScan[]>([]);
   const [result, setResult] = useState<ScanResult>("idle");
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/check-ins/issue", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        eventId: DEMO_EVENT_ID,
-        ticketId: DEMO_TICKET_ID,
-      }),
-      signal: controller.signal,
-    })
-      .then((response) => response.json())
-      .then((data: { token?: string }) => setToken(data.token ?? ""))
-      .catch(() => {
-        // Leave the scan button disabled rather than scanning an empty pass.
-      });
-    return () => controller.abort();
-  }, []);
+  const token = pass.status === "ready" ? pass.pass.token : "";
 
   async function sync(qrToken: string, idempotencyKey: string) {
-    const response = await fetch("/api/check-ins/sync", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const response = await postJson<SyncCheckInResponse>(
+      "/api/check-ins/sync",
+      {
         eventId: DEMO_EVENT_ID,
         qrToken,
         scannerId: SCANNER_ID,
         scannedAt: new Date().toISOString(),
         idempotencyKey,
-      }),
-    });
-    const data: { status?: string; ticketSuffix?: string } =
-      await response.json();
+      },
+    );
+    // A transport failure is not a verdict on the pass; keep it queued rather
+    // than telling the gate the attendee is invalid.
+    if (!response.ok) {
+      setQueue((current) => [...current, { token: qrToken, idempotencyKey }]);
+      setResult("queued");
+      return "queued" as const;
+    }
     const status: ScanResult =
-      data.status === "accepted"
+      response.data.status === "accepted"
         ? "accepted"
-        : data.status === "duplicate"
+        : response.data.status === "duplicate"
           ? "duplicate"
           : "invalid";
     setResult(status);
     if (status === "accepted") {
-      onAccepted(data.ticketSuffix ?? "1042", GATE_LABEL);
+      onAccepted(response.data.ticketSuffix ?? "1042", DEMO_GATE_LABEL);
     }
     return status;
   }
@@ -241,11 +227,23 @@ export function ScannerView({
               className="scan-button"
               onClick={scan}
               disabled={!token}
-              aria-busy={!token}
+              aria-busy={pass.status === "issuing"}
             >
               <ScanLine size={18} aria-hidden="true" />
               Scan the signed demo pass
             </button>
+            {pass.status === "failed" && (
+              <p className="scan-error" role="alert">
+                No pass to scan: {pass.error}{" "}
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={retryPass}
+                >
+                  Retry
+                </button>
+              </p>
+            )}
             <button
               type="button"
               className="text-button"

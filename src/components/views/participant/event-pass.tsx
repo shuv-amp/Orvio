@@ -1,7 +1,8 @@
 "use client";
 
-import { QrCode, RefreshCw, ShieldCheck } from "lucide-react";
+import { QrCode, RefreshCw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import type { PassState } from "../../hooks/use-signed-pass";
 
 /**
  * Signed event pass.
@@ -10,17 +11,17 @@ import { QRCodeSVG } from "qrcode.react";
  * expiry — never a name, email, or phone number. The readable identity below
  * the graphic is what makes the pass usable at a gate; the QR itself stays
  * free of personal data even if it is photographed.
+ *
+ * Issuing can fail, so the card has three states. A failure says so and offers
+ * a retry rather than leaving a spinner that never resolves.
  */
 export function EventPass({
-  token,
-  name,
-  ticketSuffix,
+  state,
+  onRetry,
 }: {
-  token: string;
-  name: string;
-  ticketSuffix: string;
+  state: PassState;
+  onRetry: () => void;
 }) {
-  const ready = token.startsWith("ey");
   return (
     <div className="panel pass-card" data-tour="pass">
       <div className="panel-head">
@@ -34,35 +35,49 @@ export function EventPass({
         <ShieldCheck size={19} aria-hidden="true" />
       </div>
 
-      <div
-        className="qr-wrap"
-        role="img"
-        aria-label={`Signed event pass QR code for ${name}, ticket ending ${ticketSuffix}. Contains no personal data.`}
-      >
-        {ready ? (
-          <QRCodeSVG
-            value={token}
-            size={150}
-            level="M"
-            marginSize={2}
-            title={`Signed pass for ${name}`}
-          />
-        ) : (
+      {state.status === "ready" ? (
+        <>
+          <div
+            className="qr-wrap"
+            role="img"
+            aria-label={`Signed event pass QR code for ${state.pass.name}, ticket ending ${state.pass.ticketSuffix}. Contains no personal data.`}
+          >
+            <QRCodeSVG
+              value={state.pass.token}
+              size={150}
+              level="M"
+              marginSize={2}
+              title={`Signed pass for ${state.pass.name}`}
+            />
+          </div>
+          <p className="pass-name">{state.pass.name}</p>
+          <p className="pass-ticket">
+            Ticket <code>••••{state.pass.ticketSuffix}</code> · No personal data
+            in QR
+          </p>
+          <p className="secure-note">
+            <ShieldCheck size={14} aria-hidden="true" />
+            Signed · event-scoped · replay protected
+          </p>
+        </>
+      ) : state.status === "issuing" ? (
+        <div className="qr-wrap" aria-busy="true">
           <span className="qr-loading">
             <RefreshCw className="spin" aria-hidden="true" />
             <span className="visually-hidden">Issuing signed pass</span>
           </span>
-        )}
-      </div>
-
-      <p className="pass-name">{name}</p>
-      <p className="pass-ticket">
-        Ticket <code>••••{ticketSuffix}</code> · No personal data in QR
-      </p>
-      <p className="secure-note">
-        <ShieldCheck size={14} aria-hidden="true" />
-        Signed · event-scoped · replay protected
-      </p>
+        </div>
+      ) : (
+        <div className="pass-error" role="alert">
+          <TriangleAlert size={26} aria-hidden="true" />
+          <strong>Pass could not be issued</strong>
+          <p>{state.error}</p>
+          <button type="button" className="secondary-button" onClick={onRetry}>
+            <RefreshCw size={15} aria-hidden="true" />
+            Try again
+          </button>
+        </div>
+      )}
     </div>
   );
 }
