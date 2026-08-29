@@ -116,6 +116,30 @@ describe("analyticsRows", () => {
     expect(headroom?.fill).toBe(100);
   });
 
+  it("bands every row and keeps the word as the primary cue", () => {
+    for (const row of rows) {
+      expect(["healthy", "watch", "critical"]).toContain(row.tone);
+    }
+  });
+
+  it("flags the gate as critical when arrivals outpace scanning", () => {
+    const squeezed = analyticsRows(
+      { ...initialMetrics, scanThroughput: 10, arrivalRate: 40 },
+      teams,
+    );
+    expect(squeezed.find((row) => row.id === "headroom")?.tone).toBe(
+      "critical",
+    );
+  });
+
+  it("reports a healthy gate once scanning keeps up", () => {
+    const clear = analyticsRows(
+      { ...initialMetrics, scanThroughput: 40, arrivalRate: 20 },
+      teams,
+    );
+    expect(clear.find((row) => row.id === "headroom")?.tone).toBe("healthy");
+  });
+
   it("gives every row a sentence, so colour is never the only cue", () => {
     for (const row of rows) {
       expect(row.detail.length).toBeGreaterThan(20);

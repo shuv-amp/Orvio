@@ -1,4 +1,4 @@
-import type { EventMetrics, Team } from "./types";
+import type { EventMetrics, Severity, Team } from "./types";
 
 /** Attendance as a 0–100 percentage, never dividing by zero. */
 export function attendancePercent(checkedIn: number, total: number): number {
@@ -49,6 +49,22 @@ export interface AnalyticsRow {
   detail: string;
   /** Drives the meter fill; always clamped to 0–100. */
   fill: number;
+  /** Health band. Always paired with a visible word, never colour alone. */
+  tone: Severity;
+}
+
+/**
+ * Band a percentage against its warning and failure thresholds.
+ * Written as "higher is better"; callers invert by passing an inverted value.
+ */
+function band(
+  value: number,
+  watchBelow: number,
+  criticalBelow: number,
+): Severity {
+  if (value < criticalBelow) return "critical";
+  if (value < watchBelow) return "watch";
+  return "healthy";
 }
 
 function clamp(value: number): number {
@@ -92,6 +108,7 @@ export function analyticsRows(
       unit: "percent",
       detail: `${metrics.checkedIn} of ${metrics.totalParticipants} registered attendees have checked in.`,
       fill: clamp(attendance),
+      tone: band(attendance, 80, 60),
     },
     {
       id: "formation",
@@ -100,6 +117,7 @@ export function analyticsRows(
       unit: "percent",
       detail: `${metrics.unmatchedParticipants} participants still need a team.`,
       fill: clamp(formation),
+      tone: band(formation, 90, 75),
     },
     {
       id: "judging",
@@ -108,6 +126,7 @@ export function analyticsRows(
       unit: "percent",
       detail: `${metrics.completedReviews} reviews complete, ${metrics.pendingReviews} outstanding across ${metrics.activeJudges} judges.`,
       fill: clamp(judging),
+      tone: band(judging, 70, 40),
     },
     {
       id: "reach",
@@ -116,6 +135,7 @@ export function analyticsRows(
       unit: "percent",
       detail: `Last critical update was sent ${metrics.announcementAgeMinutes} minutes ago.`,
       fill: clamp(metrics.announcementReach),
+      tone: band(metrics.announcementReach, 75, 50),
     },
     {
       id: "headroom",
@@ -124,6 +144,7 @@ export function analyticsRows(
       unit: "percent",
       detail: `Scanning ${metrics.scanThroughput} per minute against ${metrics.arrivalRate} arriving.`,
       fill: clamp(headroom),
+      tone: band(headroom, 100, 85),
     },
     {
       id: "reviewed",
@@ -132,6 +153,7 @@ export function analyticsRows(
       unit: "count",
       detail: `${reviewed} of ${teams.length} teams have all three reviews in.`,
       fill: clamp((reviewed / Math.max(1, teams.length)) * 100),
+      tone: band((reviewed / Math.max(1, teams.length)) * 100, 100, 50),
     },
   ];
 }
