@@ -1,0 +1,165 @@
+/* Breakpoints. Layout collapses column by column, then hands navigation to
+   the bottom dock on phones. */
+
+@media (max-width: 1180px) {
+  :root {
+    --gutter: 20px;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-grid,
+  .participant-grid,
+  .judge-grid,
+  .scanner-grid,
+  .broadcast-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    width: var(--sidebar-width);
+    transform: translateX(-102%);
+    transition: transform var(--speed) var(--ease);
+  }
+
+  .sidebar.open {
+    transform: none;
+    box-shadow: var(--shadow-pop);
+  }
+
+  .mobile-menu {
+    display: grid;
+  }
+
+  .mobile-role-dock {
+    display: flex;
+    gap: 4px;
+  }
+
+  .page-content {
+    padding-bottom: 104px;
+  }
+
+  .command-search {
+    min-width: 0;
+  }
+
+  .command-search span,
+  .command-search kbd {
+    display: none;
+  }
+
+  .command-search {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .toast {
+    bottom: 84px;
+  }
+
+  .tour-panel {
+    bottom: 84px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 14px;
+  }
+
+  .metric-grid,
+  .registration-row,
+  .fit-bars,
+  .team-selector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero-row {
+    align-items: flex-start;
+  }
+
+  .hero-actions,
+  .match-actions {
+    width: 100%;
+  }
+
+  .hero-actions button,
+  .match-actions button {
+    flex: 1;
+  }
+
+  .recovery-comparison {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+  }
+
+  .recovery-comparison > svg {
+    transform: rotate(90deg);
+  }
+
+  .rubric-row {
+    align-items: flex-start;
+  }
+
+  .score-picker button {
+    width: 34px;
+  }
+
+  .scan-frame {
+    min-height: 320px;
+    padding: 24px;
+  }
+
+  .corner {
+    width: 32px;
+    height: 32px;
+  }
+
+  .corner.top-left,
+  .corner.top-right {
+    top: 16px;
+  }
+
+  .corner.bottom-left,
+  .corner.bottom-right {
+    bottom: 16px;
+  }
+
+  .corner.top-left,
+  .corner.bottom-left {
+    left: 16px;
+  }
+
+  .corner.top-right,
+  .corner.bottom-right {
+    right: 16px;
+  }
+
+  .notification-panel {
+    position: fixed;
+    top: auto;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  .palette-foot {
+    display: none;
+  }
+}
