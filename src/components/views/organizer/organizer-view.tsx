@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { useMemo } from "react";
+import { analyticsSnapshot } from "@/lib/domain/analytics";
 import { deriveSignals } from "@/lib/domain/pulse";
 import { metricHistory } from "@/lib/domain/seed";
 import type {
@@ -24,6 +25,7 @@ import type {
 import { MetricCard } from "../../ui/metric-card";
 import type { OrganizerSection, ShowToast } from "../../types";
 import { Leaderboard } from "../leaderboard";
+import { AnalyticsWorkspace } from "./analytics-workspace";
 import { AuditWorkspace } from "./audit-workspace";
 import { BroadcastWorkspace } from "./broadcast-workspace";
 import { RecoveryCard } from "./recovery-card";
@@ -67,6 +69,8 @@ export function OrganizerView({
 
   if (section === "signals") return <SignalsWorkspace metrics={metrics} />;
   if (section === "audit") return <AuditWorkspace audits={audits} />;
+  if (section === "analytics")
+    return <AnalyticsWorkspace metrics={metrics} teams={teams} />;
   if (section === "broadcasts") {
     return (
       <BroadcastWorkspace
@@ -80,15 +84,8 @@ export function OrganizerView({
   const criticalCount = signals.filter(
     (signal) => signal.severity === "critical",
   ).length;
-  const matched = metrics.totalParticipants - metrics.unmatchedParticipants;
-  const attendance = Math.round(
-    (metrics.checkedIn / metrics.totalParticipants) * 1000,
-  );
-  const judgingProgress = Math.round(
-    (metrics.completedReviews /
-      Math.max(1, metrics.completedReviews + metrics.pendingReviews)) *
-      100,
-  );
+  // One source of truth for these percentages, shared with the analytics view.
+  const snapshot = analyticsSnapshot(metrics);
 
   return (
     <div className="view-stack">
@@ -130,14 +127,14 @@ export function OrganizerView({
           label="Checked in"
           value={String(metrics.checkedIn)}
           suffix={`/ ${metrics.totalParticipants}`}
-          detail={`${(attendance / 10).toFixed(1)}% attendance`}
+          detail={`${snapshot.attendance}% attendance`}
           series={metricHistory.checkedIn}
           icon={Users}
           tone="indigo"
         />
         <MetricCard
           label="Team readiness"
-          value={String(matched)}
+          value={String(snapshot.matched)}
           suffix="matched"
           detail={`${metrics.unmatchedParticipants} need a team`}
           series={metricHistory.matched}
@@ -146,7 +143,7 @@ export function OrganizerView({
         />
         <MetricCard
           label="Judging progress"
-          value={String(judgingProgress)}
+          value={String(snapshot.judging)}
           suffix="%"
           detail={`${metrics.pendingReviews} reviews remaining`}
           series={metricHistory.judgingProgress}
