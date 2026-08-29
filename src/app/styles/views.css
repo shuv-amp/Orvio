@@ -1340,3 +1340,22 @@
   font-size: 12.5px;
   text-align: center;
 }
+
+/* Health band per analytics row. The word in the pill is the primary cue;
+   the meter colour repeats it. */
+.analytics-row.healthy .bar i {
+  background: var(--success);
+}
+.analytics-row.watch .bar i {
+  background: var(--warn);
+}
+.analytics-row.critical .bar i {
+  background: var(--danger);
+}
+
+.analytics-detail {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -2,6 +2,8 @@ import { ChartNoAxesColumn } from "lucide-react";
 import { useMemo } from "react";
 import { analyticsRows } from "@/lib/domain/analytics";
 import type { EventMetrics, Team } from "@/lib/domain/types";
+import { StatusPill } from "../../ui/status-pill";
+import { Leaderboard } from "../leaderboard";
 
 /**
  * Organizer analytics.
@@ -47,7 +49,7 @@ export function AnalyticsWorkspace({
 
         <ul className="analytics-grid">
           {rows.map((row) => (
-            <li className="analytics-row" key={row.id}>
+            <li className={`analytics-row ${row.tone}`} key={row.id}>
               <div className="analytics-head">
                 <span className="analytics-label">{row.label}</span>
                 <strong className="analytics-value">
@@ -70,11 +72,16 @@ export function AnalyticsWorkspace({
               >
                 <i style={{ inlineSize: `${row.fill}%` }} />
               </div>
-              <p className="analytics-detail">{row.detail}</p>
+              <p className="analytics-detail">
+                <StatusPill severity={row.tone} />
+                {row.detail}
+              </p>
             </li>
           ))}
         </ul>
       </section>
+
+      <Leaderboard teams={teams} />
     </div>
   );
 }
