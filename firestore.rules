@@ -12,9 +12,17 @@ service cloud.firestore {
 
       match /participants/{participantId} {
         allow read: if organizer() || sameUser(participantId);
-        allow create, update: if sameUser(participantId)
-          && request.resource.data.keys().hasOnly(['name', 'role', 'skills', 'interests', 'availability', 'teamId', 'checkedIn']);
+        allow create: if sameUser(participantId)
+          && request.resource.data.keys().hasOnly(['name', 'role', 'skills', 'interests', 'availability']);
+        allow update: if sameUser(participantId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'role', 'skills', 'interests', 'availability']);
         allow delete: if organizer();
+      }
+
+      match /tickets/{ticketId} {
+        allow read: if organizer() || (role('participant') && resource.data.participantId == request.auth.uid);
+        allow write: if organizer();
       }
 
       match /teamRequests/{requestId} {
@@ -42,6 +50,8 @@ service cloud.firestore {
       match /scores/{scoreId} {
         allow read: if organizer() || (role('judge') && resource.data.judgeId == request.auth.uid);
         allow create: if role('judge')
+          && request.resource.data.keys().hasOnly(['judgeId', 'teamId', 'rubricVersion', 'scores', 'feedback', 'finalized', 'createdAt'])
+          && request.resource.data.keys().hasAll(['judgeId', 'teamId', 'rubricVersion', 'scores', 'feedback', 'finalized'])
           && request.resource.data.judgeId == request.auth.uid
           && request.resource.data.finalized == true;
         allow update, delete: if false;
