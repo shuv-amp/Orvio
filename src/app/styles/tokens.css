@@ -1,0 +1,216 @@
+/*
+ * Design tokens.
+ *
+ * Components only ever reference a semantic token (--surface, --text-muted,
+ * --danger-soft). A theme is therefore a redefinition of this one block, which
+ * is why dark mode and high contrast need no per-component overrides.
+ *
+ * Tints are derived with color-mix() against the current surface rather than
+ * hard-coded, so every soft background follows its theme automatically.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces, from furthest back to closest. */
+  --bg: #f2f1ea;
+  --surface: #fffefa;
+  --surface-2: #faf9f3;
+  --surface-3: #efeee6;
+  --border: #e3e2d8;
+  --border-strong: #cdccc0;
+
+  /* Text, in decreasing prominence. */
+  --text: #16170f;
+  --text-muted: #5b5c52;
+  /* Darkened from #74756a, which measured 4.42:1 against --surface-2 and
+     4.12:1 against --bg. This clears 5.2:1 on every light surface. */
+  --text-subtle: #63645a;
+  --text-inverse: #fbfaf4;
+
+  /* The dark rail the sidebar and inverted cards sit on. */
+  --brand-surface: #17180f;
+  --brand-surface-2: #22231a;
+  --brand-border: #35362c;
+  --brand-text: #f4f3eb;
+  --brand-text-muted: #b6b7ac;
+
+  /* Lime is the single accent; --accent-ink is the only text colour that is
+     legible on it. */
+  --accent: #d8fb51;
+  --accent-strong: #c2e63c;
+  --accent-ink: #16170f;
+  --accent-soft: #edfbc2;
+  --accent-border: #cfe88a;
+
+  --success: #3f6f3c;
+  --warn: #90600f;
+  --danger: #b13c2b;
+  --info: #4f44c4;
+
+  --focus: #4b3fd8;
+  --focus-ring: 3px;
+
+  /* Primary call to action. Light inverts to ink; dark uses the accent,
+     because a full-width near-white slab dominates a dark screen. */
+  --cta-bg: var(--text);
+  --cta-ink: var(--text-inverse);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgb(22 23 15 / 5%);
+  --shadow-md:
+    0 2px 4px rgb(22 23 15 / 4%), 0 10px 24px -12px rgb(22 23 15 / 12%);
+  --shadow-lg:
+    0 4px 10px rgb(22 23 15 / 6%), 0 28px 60px -20px rgb(22 23 15 / 20%);
+  --shadow-pop:
+    0 10px 20px -10px rgb(22 23 15 / 24%), 0 40px 80px -24px rgb(22 23 15 / 30%);
+
+  --sidebar-width: 248px;
+  --content-max: 1360px;
+  --gutter: 28px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --speed-fast: 0.14s;
+  --speed: 0.22s;
+
+  /* Derived tints. Each stays inside its theme because it mixes with the
+     current surface rather than with white. */
+  --success-soft: color-mix(in oklab, var(--success) 12%, var(--surface));
+  --success-border: color-mix(in oklab, var(--success) 30%, var(--surface));
+  --warn-soft: color-mix(in oklab, var(--warn) 13%, var(--surface));
+  --warn-border: color-mix(in oklab, var(--warn) 32%, var(--surface));
+  --danger-soft: color-mix(in oklab, var(--danger) 11%, var(--surface));
+  --danger-border: color-mix(in oklab, var(--danger) 30%, var(--surface));
+  --info-soft: color-mix(in oklab, var(--info) 10%, var(--surface));
+  --info-border: color-mix(in oklab, var(--info) 28%, var(--surface));
+  /* Explicit alpha rather than color-mix(..., transparent): mixing with
+     `transparent` in oklab composites unpredictably, which left overlay
+     scrims far weaker than intended. */
+  --scrim: rgb(23 24 15 / 62%);
+  --scrim-soft: rgb(23 24 15 / 46%);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #101109;
+  --surface: #1a1b16;
+  --surface-2: #212219;
+  --surface-3: #292a21;
+  --border: #31322a;
+  --border-strong: #494a40;
+
+  --text: #f1f0e8;
+  --text-muted: #b6b7ab;
+  /* Lifted from #93948a, which measured 4.27:1 where a raised surface
+     sits behind subtle text. This clears 5.3:1. */
+  --text-subtle: #a3a499;
+  --text-inverse: #16170f;
+
+  --brand-surface: #0b0c07;
+  --brand-surface-2: #17180f;
+  --brand-border: #2c2d24;
+  --brand-text: #f4f3eb;
+  --brand-text-muted: #a9aa9f;
+
+  --accent: #d8fb51;
+  --accent-strong: #e6ff7a;
+  --accent-ink: #16170f;
+  --accent-soft: #2d3618;
+  --accent-border: #4b5a24;
+
+  /* Lifted so they clear 4.5:1 against the dark surfaces. */
+  --success: #8ed389;
+  --warn: #e7b465;
+  --danger: #f08d7d;
+  --info: #a89dff;
+
+  --focus: #b8aeff;
+  --cta-bg: var(--accent);
+  --cta-ink: var(--accent-ink);
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 32%), 0 10px 24px -12px rgb(0 0 0 / 60%);
+  --shadow-lg: 0 4px 10px rgb(0 0 0 / 34%), 0 28px 60px -20px rgb(0 0 0 / 68%);
+  --shadow-pop:
+    0 10px 20px -10px rgb(0 0 0 / 60%), 0 40px 80px -24px rgb(0 0 0 / 72%);
+
+  --scrim: rgb(0 0 0 / 72%);
+  --scrim-soft: rgb(0 0 0 / 56%);
+}
+
+/*
+ * High contrast is independent of the colour scheme: someone who needs it in
+ * dark mode should not be forced back to light. It raises text and border
+ * contrast and removes the soft tints that carry the least information.
+ */
+[data-contrast="high"] {
+  --surface: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #f2f2f2;
+  --bg: #ffffff;
+  --border: #1a1a1a;
+  --border-strong: #000000;
+  --text: #000000;
+  --text-muted: #1a1a1a;
+  --text-subtle: #1a1a1a;
+  --brand-surface: #000000;
+  --brand-surface-2: #000000;
+  --brand-border: #ffffff;
+  --brand-text: #ffffff;
+  --brand-text-muted: #ffffff;
+  --accent: #f2ff66;
+  --accent-strong: #f2ff66;
+  --accent-soft: #ffffff;
+  --accent-border: #000000;
+  --success: #005c1f;
+  --warn: #6b3d00;
+  --danger: #a30000;
+  --info: #1d1596;
+  --focus: #0000cc;
+  --focus-ring: 4px;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: 0 0 0 1px #000000;
+  --shadow-pop: 0 0 0 2px #000000;
+}
+
+[data-theme="dark"][data-contrast="high"] {
+  --surface: #000000;
+  --surface-2: #000000;
+  --surface-3: #141414;
+  --bg: #000000;
+  --border: #ffffff;
+  --border-strong: #ffffff;
+  --text: #ffffff;
+  --text-muted: #f2f2f2;
+  --text-subtle: #f2f2f2;
+  --text-inverse: #000000;
+  --brand-surface: #000000;
+  --brand-surface-2: #000000;
+  --brand-text: #ffffff;
+  --success: #7dff9a;
+  --warn: #ffd166;
+  --danger: #ff9b8c;
+  --info: #c3b9ff;
+  --focus: #ffff00;
+  --shadow-lg: 0 0 0 1px #ffffff;
+  --shadow-pop: 0 0 0 2px #ffffff;
+}
+
+/*
+ * Respect an operating-system contrast request even when the in-app toggle
+ * has not been used.
+ */
+@media (prefers-contrast: more) {
+  :root:not([data-contrast="normal"]) {
+    --text-muted: var(--text);
+    --text-subtle: var(--text);
+    --border: var(--border-strong);
+  }
+}
