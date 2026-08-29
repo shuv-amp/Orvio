@@ -70,7 +70,9 @@ test("event operations navigation opens distinct working sections", async ({
       name: "Send one useful message to the right people.",
     }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Send targeted update" }).click();
+  const send = page.getByRole("button", { name: "Send targeted update" });
+  await send.scrollIntoViewIfNeeded();
+  await send.click();
   await expect(page.getByText("Broadcast queued")).toBeVisible();
 
   await openNav(page);
@@ -309,6 +311,26 @@ test("walks the guided demo across role workspaces", async ({ page }) => {
 });
 
 /* --------------------------------------------------------- notifications */
+
+test("tracks attendance and engagement in the analytics view", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await openNav(page);
+  await page.getByRole("button", { name: "Analytics" }).click();
+  await expect(
+    page.getByRole("heading", { name: /Attendance and engagement/ }),
+  ).toBeVisible();
+  const attendance = page.getByRole("meter", { name: "Attendance" });
+  await expect(attendance).toHaveAttribute("aria-valuenow", /\d+/);
+  await expect(page.getByText(/of 512 registered attendees/)).toBeVisible();
+  await expect(
+    page.getByRole("meter", { name: "Team formation" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("meter", { name: "Judging progress" }),
+  ).toBeVisible();
+});
 
 test("opens the notification popover over the live feed", async ({ page }) => {
   await page.goto("/");
