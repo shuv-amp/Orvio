@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const SCAN_PASS = "Scan the signed demo pass";
 
@@ -40,6 +40,27 @@ async function openPaletteWithShortcut(page: Page) {
   }).toPass({ timeout: 15_000 });
 }
 
+/** Click the visible point without Playwright re-scrolling it under the dock. */
+async function clickInView(page: Page, locator: Locator) {
+  await locator.evaluate((element) =>
+    element.scrollIntoView({ block: "center", inline: "center" }),
+  );
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const receivesPointer = await locator.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const target = document.elementFromPoint(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+    return target === element || (target !== null && element.contains(target));
+  });
+  expect(receivesPointer).toBe(true);
+  await page.mouse.click(point.x, point.y);
+}
+
 test("communicates the operational wedge in ten seconds", async ({ page }) => {
   await page.goto("/");
   await expect(
@@ -71,8 +92,7 @@ test("event operations navigation opens distinct working sections", async ({
     }),
   ).toBeVisible();
   const send = page.getByRole("button", { name: "Send targeted update" });
-  await send.scrollIntoViewIfNeeded();
-  await send.click();
+  await clickInView(page, send);
   await expect(page.getByText("Broadcast queued")).toBeVisible();
 
   await openNav(page);
@@ -93,7 +113,7 @@ test("requires human approval before applying recovery", async ({ page }) => {
   ).toBeVisible();
   const approve = page.getByRole("button", { name: "Review & approve" });
   await expect(approve).toBeVisible();
-  await approve.click();
+  await clickInView(page, approve);
   await expect(page.getByText("Recovery active")).toBeVisible();
   await expect(page.getByText("Recovery approved")).toBeVisible();
 });
@@ -121,7 +141,13 @@ test("exposes each match component as a labelled meter", async ({ page }) => {
   await expect(meter).toHaveAttribute("aria-valuemax", "100");
 });
 
-test("queues offline, synchronizes, and blocks replay", async ({ page }) => {
+test("queues offline, synchronizes, and blocks replay", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name.startsWith("mobile"),
+    "The desktop project owns the shared demo ticket's replay-lock test",
+  );
   await page.goto("/scanner");
   await page.getByRole("button", { name: /Online Server replay/ }).click();
   await page.getByRole("button", { name: SCAN_PASS }).click();
