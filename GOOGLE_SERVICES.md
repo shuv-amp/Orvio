@@ -36,16 +36,20 @@ Mutating APIs verify Firebase ID tokens and custom `role` claims (`participant`,
 | `src/app/api/recovery/route.ts`        | Organizer                                   |
 | `src/app/api/registration/route.ts`    | Participant / organizer                     |
 
-## 4. Vertex AI Gemini
+## 4. Vertex AI / Google AI Studio Gemini
 
 Recovery copy only. Pulse already computed the actions, projections, and approval boundary. Gemini may rewrite `summary` and `announcement` against a JSON schema. It cannot invent numbers or mutate state.
 
-| File                            | Role                                                             |
-| ------------------------------- | ---------------------------------------------------------------- |
-| `src/app/api/recovery/route.ts` | `@google/genai` Vertex client, `responseSchema`, temperature 0.2 |
-| `src/lib/domain/pulse.ts`       | Actions and before/after metrics (no model)                      |
+| File                            | Role                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| `src/app/api/recovery/route.ts` | `@google/genai` client (supports Vertex AI or Google AI Studio key), schema |
+| `src/lib/domain/pulse.ts`       | Actions and before/after metrics (no model)                                 |
 
-`GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, optional `GEMINI_MODEL` (default `gemini-2.5-flash`). Unset project → `source: "deterministic-fallback"`.
+Supported configurations:
+
+1. **Google AI Studio:** provide `GEMINI_API_KEY`.
+2. **Vertex AI:** provide `GOOGLE_CLOUD_PROJECT` and, optionally, `GOOGLE_CLOUD_LOCATION`.
+3. **Deterministic fallback:** leave both unset to return `source: "deterministic-fallback"`.
 
 ## 5. Cloud Build and Artifact Registry
 

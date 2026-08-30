@@ -44,18 +44,21 @@ export async function POST(request: Request) {
   }
 
   const fallback = simulateIncident(input.incident, initialMetrics);
+  const apiKey = process.env.GEMINI_API_KEY;
   const project = process.env.GOOGLE_CLOUD_PROJECT;
-  if (!project)
+  if (!apiKey && !project)
     return NextResponse.json(fallback, {
       headers: { "Cache-Control": "no-store" },
     });
 
   try {
-    const ai = new GoogleGenAI({
-      vertexai: true,
-      project,
-      location: process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1",
-    });
+    const ai = apiKey
+      ? new GoogleGenAI({ apiKey })
+      : new GoogleGenAI({
+          vertexai: true,
+          project,
+          location: process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1",
+        });
     const response = await ai.models.generateContent({
       model: process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
       contents: JSON.stringify({
@@ -65,7 +68,7 @@ export async function POST(request: Request) {
       }),
       config: {
         systemInstruction:
-          "You are an event operations copywriter. Explain only the supplied metrics and actions. Never invent numbers, people, or actions. Return concise JSON.",
+          "You are an event operations copywriter. Use direct, calm language without emojis, greetings, or marketing language. Explain only the supplied metrics and actions. Never invent numbers, people, or actions. Return concise JSON.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,

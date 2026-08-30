@@ -32,6 +32,7 @@ afterAll(() => {
 });
 afterEach(() => {
   delete process.env.GOOGLE_CLOUD_PROJECT;
+  delete process.env.GEMINI_API_KEY;
 });
 beforeEach(() => {
   clearRateLimitsForTesting();
