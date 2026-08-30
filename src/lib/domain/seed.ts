@@ -7,9 +7,9 @@ import type {
 } from "./types";
 
 export const currentParticipant: Participant = {
-  id: "p-aanya",
-  name: "Aanya Sharma",
-  initials: "AS",
+  id: "p-shuvam",
+  name: "Shuvam Pandey",
+  initials: "SP",
   role: "Product designer",
   skills: ["UI/UX", "Research", "Pitching"],
   interests: ["Climate", "Civic tech", "AI agents"],

@@ -4,16 +4,18 @@ Event operations that see a break before it hits the floor.
 
 Orvio Pulse is a four-role platform for live events. It runs registration and signed QR check-in, explainable team formation, broadcasts, structured judging, a live leaderboard, and organizer analytics. Event Pulse sits on that same operational picture and produces a recovery plan that only an organizer can approve.
 
+> **PromptWars × AbhiyantriX 2026:** Orvio ranked 1st among 332 participants in the coding round with a score of 96.98 and advanced to the pitching round.
+
 ![Orvio Pulse control tower: live event metrics, the Event Pulse risk panel, the incident desk, and the live leaderboard](docs/homescreen.png)
 
 ## Demo path
 
 1. **Participant** — register a walk-up attendee. A unique ticket UUID and signed QR pass are issued. Match Lab shows the fit components and a participant-controlled swap.
-2. **Scanner** — disconnect, scan Aanya’s pass, reconnect. The queued scan verifies. Scan again and replay protection rejects the duplicate.
+2. **Scanner** — disconnect, scan Shuvam’s pass, reconnect. The queued scan verifies. Scan again and replay protection rejects the duplicate.
 3. **Control tower → Recovery Engine** — choose a judge, gate, or venue incident. Review the before/after metric. Approve the proposal.
 4. **Judging portal** — score against the locked rubric, attach evidence, finalize. The leaderboard re-ranks immediately.
 
-Synthetic demo data is labeled. Vertex AI is optional: the same recovery plan is returned with `source: "deterministic-fallback"` when a Google project is not configured.
+Synthetic demo data is labeled. Gemini copy is optional: configure Google AI Studio or Vertex AI; without either, the same recovery plan is returned with `source: "deterministic-fallback"`.
 
 Architecture, the multi-role flow, and UX wireframes are in
 [docs/architecture.md](docs/architecture.md).

@@ -45,7 +45,7 @@ async function issuePass(): Promise<PassState> {
   const pass: SignedPass = {
     token: result.data.token,
     ticketSuffix: DEMO_TICKET_ID.slice(-4),
-    name: "Aanya Sharma",
+    name: "Shuvam Pandey",
   };
   cachedPass = pass;
   return { status: "ready", pass };

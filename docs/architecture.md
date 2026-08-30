@@ -144,7 +144,7 @@ rejected on the second attempt and attendance cannot be inflated.
 ### Participant — registration, Match Lab, signed pass
 
 ```text
-┌ Ready to build, Aanya?                          ┌ Checked in ─────────┐      │
+┌ Ready to build, Shuvam?                         ┌ Checked in ─────────┐      │
 │                                                 │ North Gate · 13:42  │      │
 ├ REGISTRATION & ATTENDEE CHECK-IN ───────────────┴─────────────────────┴──────┤
 │ Full name [________]   Role [Product designer ▾]                             │
@@ -155,7 +155,7 @@ rejected on the second attempt and attendance cannot be inflated.
 │ [01 Project Aster 99%][02 Relay 90%][03 …62%]  │      ▓▓░▓░▓▓                │
 │ KM ZK YOU  Project Aster                       │      ░▓▓░▓░░   ← no PII     │
 │ Skill coverage   ▓▓▓▓▓▓▓▓ 100%                 │      ▓░▓▓░▓▓                │
-│ Shared interests ▓▓▓▓▓▓▓▓ 100%                 │  AANYA SHARMA               │
+│ Shared interests ▓▓▓▓▓▓▓▓ 100%                 │  SHUVAM PANDEY              │
 │ Role complement  ▓▓▓▓▓▓▓░  96%                 │  Ticket ••••1042            │
 │ Availability     ▓▓▓▓▓▓▓░  95%                 │  Signed · replay protected  │
 │ ✓ Why this match works                         ├ LIVE UPDATES ───────────────┤
