@@ -430,14 +430,11 @@ test("fits the mobile viewport and exposes the role dock", async ({
   await expect(
     page.getByRole("navigation", { name: "Quick role switcher" }),
   ).toBeVisible();
-  await page.evaluate(() => document.fonts.ready);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          document.documentElement.scrollWidth -
-          document.documentElement.clientWidth,
-      ),
-    )
-    .toBe(0);
+  const sizes = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    // Unlike clientWidth, innerWidth includes a non-overlay vertical
+    // scrollbar on Linux. That scrollbar is not horizontal overflow.
+    viewportWidth: window.innerWidth,
+  }));
+  expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.viewportWidth);
 });
