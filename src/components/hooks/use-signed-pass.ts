@@ -36,12 +36,11 @@ export function clearPassCacheForTesting(): void {
   inFlight = null;
 }
 
-async function issuePass(signal?: AbortSignal): Promise<PassState> {
-  const result = await postJson<IssuePassResponse>(
-    "/api/check-ins/issue",
-    { eventId: DEMO_EVENT_ID, ticketId: DEMO_TICKET_ID },
-    signal,
-  );
+async function issuePass(): Promise<PassState> {
+  const result = await postJson<IssuePassResponse>("/api/check-ins/issue", {
+    eventId: DEMO_EVENT_ID,
+    ticketId: DEMO_TICKET_ID,
+  });
   if (!result.ok) return { status: "failed", error: result.error };
   const pass: SignedPass = {
     token: result.data.token,
@@ -65,15 +64,20 @@ export function useSignedPass(): {
 
   useEffect(() => {
     if (state.status !== "issuing") return;
-    const controller = new AbortController();
-    // Two views mounting together share one request rather than racing.
-    inFlight ??= issuePass(controller.signal);
+    let cancelled = false;
+    // The request is deliberately not tied to this component's lifecycle. It
+    // populates a session cache that other views read, and React's development
+    // double-mount would otherwise abort the shared promise, leaving every
+    // reader waiting on a request that can never resolve.
+    // Two views mounting together still share one request rather than racing.
+    inFlight ??= issuePass();
     void inFlight.then((next) => {
       inFlight = null;
-      const aborted = next.status === "failed" && next.error === "aborted";
-      if (!controller.signal.aborted && !aborted) setState(next);
+      if (!cancelled) setState(next);
     });
-    return () => controller.abort();
+    return () => {
+      cancelled = true;
+    };
   }, [state.status]);
 
   const retry = useCallback(() => {
