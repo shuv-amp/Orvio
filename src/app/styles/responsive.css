@@ -30,11 +30,13 @@
     left: 0;
     z-index: 50;
     width: var(--sidebar-width);
+    visibility: hidden;
     transform: translateX(-102%);
     transition: transform var(--speed) var(--ease);
   }
 
   .sidebar.open {
+    visibility: visible;
     transform: none;
     box-shadow: var(--shadow-pop);
   }

@@ -107,7 +107,10 @@ test("event operations navigation opens distinct working sections", async ({
 
 test("requires human approval before applying recovery", async ({ page }) => {
   await page.goto("/organizer");
-  await page.getByRole("button", { name: "Run selected scenario" }).click();
+  await clickInView(
+    page,
+    page.getByRole("button", { name: "Run selected scenario" }),
+  );
   await expect(
     page.getByText("Judge unavailable with 37 reviews pending"),
   ).toBeVisible();
@@ -427,9 +430,14 @@ test("fits the mobile viewport and exposes the role dock", async ({
   await expect(
     page.getByRole("navigation", { name: "Quick role switcher" }),
   ).toBeVisible();
-  const sizes = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
-  expect(sizes.scrollWidth).toBe(sizes.clientWidth);
+  await page.evaluate(() => document.fonts.ready);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      ),
+    )
+    .toBe(0);
 });
